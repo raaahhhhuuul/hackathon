@@ -6,7 +6,11 @@ const fs = require('fs');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const csv = require('csv-parser');
+const dotenv = require('dotenv');
 const geminiService = require('./geminiService');
+
+// Load environment variables from .env file
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -790,6 +794,39 @@ app.post('/api/analytics/query', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error processing analytics query:', error);
     res.status(500).json({ error: 'Failed to process analytics query' });
+  }
+});
+
+// Gemini API endpoint for chatbot
+app.post('/api/gemini', async (req, res) => {
+  try {
+    const { message } = req.body;
+
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(400).json({ 
+        error: 'Gemini API key not configured',
+        message: 'I apologize, but the AI service is not currently configured. Please contact your administrator to set up the Gemini API key.'
+      });
+    }
+
+    // Temporary mock response to test the endpoint
+    const mockResponse = {
+      candidates: [{
+        content: {
+          parts: [{
+            text: `I'm your AI business assistant! You asked: "${message}". I can help you with business analysis, inventory management, customer insights, and sales optimization. For now, I'm providing a mock response while we configure the full AI integration. What specific business question would you like help with?`
+          }]
+        }
+      }]
+    };
+
+    res.json(mockResponse);
+  } catch (error) {
+    console.error('Gemini API error:', error);
+    res.status(500).json({ 
+      error: "Server error",
+      message: 'I encountered an error while processing your request. Please try again later.'
+    });
   }
 });
 

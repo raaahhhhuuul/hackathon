@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Bot, User, Loader2 } from 'lucide-react';
+import { X, Send, Bot, Loader2 } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -17,7 +16,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ onClose }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hello! I'm your AI business assistant powered by Gemini AI. I can help you with data analysis, inventory insights, customer trends, and sales optimization. I have access to your business data and can provide personalized recommendations. What would you like to know?",
+      text: "Hello! I'm your AI business assistant powered by Gemini AI. I can help you with data analysis, inventory insights, customer trends, and sales optimization. What would you like to know?",
       sender: 'bot',
       timestamp: new Date(),
     },
@@ -35,6 +34,35 @@ const Chatbot: React.FC<ChatbotProps> = ({ onClose }) => {
     scrollToBottom();
   }, [messages]);
 
+  // Call your backend instead of Gemini API directly
+  const callGeminiAPI = async (message: string) => {
+    try {
+      const response = await fetch('http://localhost:5001/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+
+      // If backend returns candidates
+      if (data.candidates?.[0]?.content) {
+        return data.candidates[0].content.parts[0].text;
+      }
+
+      // If backend returns a plain string
+      if (typeof data === 'string') {
+        return data;
+      }
+
+      throw new Error('Invalid response from Gemini API');
+    } catch (error) {
+      console.error('API error:', error);
+      throw error;
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isProcessing) return;
 
@@ -46,61 +74,37 @@ const Chatbot: React.FC<ChatbotProps> = ({ onClose }) => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputValue;
     setInputValue('');
     setIsTyping(true);
     setIsProcessing(true);
 
     try {
-      // Get authentication token
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Authentication required');
-      }
+      const aiResponseText = await callGeminiAPI(currentInput);
 
-      // Send message to Gemini API endpoint
-      const response = await fetch('/api/chatbot', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ message: inputValue })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get AI response');
-      }
-
-      const data = await response.json();
-      
-      // Simulate typing delay for better UX
       setTimeout(() => {
         const aiResponse: Message = {
           id: (Date.now() + 1).toString(),
-          text: data.response,
+          text: aiResponseText,
           sender: 'bot',
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, aiResponse]);
         setIsTyping(false);
         setIsProcessing(false);
-      }, 1000);
-
+      }, 800);
     } catch (error) {
-      console.error('Error getting AI response:', error);
-      
-      // Fallback response
       setTimeout(() => {
         const fallbackResponse: Message = {
           id: (Date.now() + 1).toString(),
-          text: "I apologize, but I'm having trouble accessing your business data right now. Please try again in a moment, or you can ask me general business questions.",
+          text: `I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again later.`,
           sender: 'bot',
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, fallbackResponse]);
         setIsTyping(false);
         setIsProcessing(false);
-      }, 1000);
+      }, 800);
     }
   };
 
@@ -112,14 +116,9 @@ const Chatbot: React.FC<ChatbotProps> = ({ onClose }) => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.8, y: 20 }}
-      className="fixed bottom-4 right-4 w-96 h-[500px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col z-50"
-    >
+    <div className="fixed bottom-4 right-4 w-96 h-[500px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col z-50">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-t-2xl">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-2xl">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
             <Bot className="w-5 h-5" />
@@ -129,27 +128,27 @@ const Chatbot: React.FC<ChatbotProps> = ({ onClose }) => {
             <p className="text-xs text-white/80">Powered by Gemini AI</p>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="text-white/80 hover:text-white transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={onClose}
+            className="text-white/80 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
-          <motion.div
+          <div
             key={message.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
             className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
               className={`max-w-[80%] p-3 rounded-2xl ${
                 message.sender === 'user'
-                  ? 'bg-primary-600 text-white'
+                  ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-800'
               }`}
             >
@@ -158,25 +157,21 @@ const Chatbot: React.FC<ChatbotProps> = ({ onClose }) => {
                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
-          </motion.div>
+          </div>
         ))}
-        
+
         {/* Typing indicator */}
         {isTyping && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-start"
-          >
+          <div className="flex justify-start">
             <div className="bg-gray-100 text-gray-800 p-3 rounded-2xl">
               <div className="flex items-center space-x-1">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span className="text-sm">AI is thinking...</span>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
-        
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -189,13 +184,13 @@ const Chatbot: React.FC<ChatbotProps> = ({ onClose }) => {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Ask about your business data..."
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={isProcessing}
           />
           <button
             onClick={handleSendMessage}
             disabled={!inputValue.trim() || isProcessing}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>
@@ -204,8 +199,8 @@ const Chatbot: React.FC<ChatbotProps> = ({ onClose }) => {
           I can analyze your inventory, customers, sales, and provide AI-powered insights
         </p>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
-export default Chatbot; 
+export default Chatbot;
