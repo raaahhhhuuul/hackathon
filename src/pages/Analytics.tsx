@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   BarChart3, 
@@ -11,7 +11,9 @@ import {
   Calendar,
   Filter,
   Download,
-  Eye
+  Eye,
+  Search,
+  Loader2
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -38,6 +40,13 @@ import {
 const Analytics: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('30d');
   const [selectedMetric, setSelectedMetric] = useState('revenue');
+  const [aiInsights, setAiInsights] = useState<any[]>([]);
+  const [businessData, setBusinessData] = useState<any>(null);
+  const [trendAnalysis, setTrendAnalysis] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [customQuery, setCustomQuery] = useState('');
+  const [customInsights, setCustomInsights] = useState<string>('');
+  const [queryLoading, setQueryLoading] = useState(false);
 
   // Mock analytics data
   const revenueData = [
@@ -70,29 +79,146 @@ const Analytics: React.FC = () => {
     { metric: 'Average Order Value', value: '₹89', change: 5, trend: 'up' },
   ];
 
-  const aiInsights = [
-    {
-      type: 'opportunity',
-      title: 'Revenue Optimization Opportunity',
-      description: 'Increasing prices by 5% on electronics could boost revenue by $8,400/month without significant customer loss.',
-      impact: 'High',
-      confidence: 87
-    },
-    {
-      type: 'trend',
-      title: 'Seasonal Trend Detected',
-      description: 'Home & Garden category shows 25% higher sales in spring months. Consider seasonal marketing campaigns.',
-      impact: 'Medium',
-      confidence: 92
-    },
-    {
-      type: 'alert',
-      title: 'Customer Churn Risk',
-      description: '15% of customers haven\'t made a purchase in 60 days. Implement re-engagement campaigns.',
-      impact: 'High',
-      confidence: 78
+  // Fetch AI insights from the server
+  useEffect(() => {
+    fetchAIInsights();
+    fetchTrendAnalysis();
+  }, []);
+
+  const fetchAIInsights = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/analytics/ai-insights', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setBusinessData(data.businessData);
+        
+        // Parse AI insights and format them for display
+        const formattedInsights = parseAIInsights(data.aiInsights);
+        setAiInsights(formattedInsights);
+      }
+    } catch (error) {
+      console.error('Error fetching AI insights:', error);
+      // Fallback to mock insights
+      setAiInsights([
+        {
+          type: 'opportunity',
+          title: 'Revenue Optimization Opportunity',
+          description: 'Increasing prices by 5% on electronics could boost revenue by $8,400/month without significant customer loss.',
+          impact: 'High',
+          confidence: 87
+        },
+        {
+          type: 'trend',
+          title: 'Seasonal Trend Detected',
+          description: 'Home & Garden category shows 25% higher sales in spring months. Consider seasonal marketing campaigns.',
+          impact: 'Medium',
+          confidence: 92
+        },
+        {
+          type: 'alert',
+          title: 'Customer Churn Risk',
+          description: '15% of customers haven\'t made a purchase in 60 days. Implement re-engagement campaigns.',
+          impact: 'High',
+          confidence: 78
+        }
+      ]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const fetchTrendAnalysis = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/analytics/trends', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.trendAnalysis) {
+          setTrendAnalysis(data.trendAnalysis);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching trend analysis:', error);
+    }
+  };
+
+  const parseAIInsights = (aiText: string) => {
+    // Simple parsing of AI text to extract insights
+    const insights = [];
+    const lines = aiText.split('\n').filter(line => line.trim());
+    
+    let currentInsight: any = {};
+    
+    lines.forEach(line => {
+      if (line.includes('insight') || line.includes('trend') || line.includes('opportunity') || line.includes('risk')) {
+        if (currentInsight.title) {
+          insights.push(currentInsight);
+        }
+        currentInsight = {
+          type: line.includes('risk') ? 'alert' : line.includes('opportunity') ? 'opportunity' : 'trend',
+          title: line.trim(),
+          description: '',
+          impact: 'Medium',
+          confidence: 85
+        };
+      } else if (currentInsight.title && line.trim()) {
+        currentInsight.description = line.trim();
+      }
+    });
+    
+    if (currentInsight.title) {
+      insights.push(currentInsight);
+    }
+    
+    return insights.length > 0 ? insights : [
+      {
+        type: 'insight',
+        title: 'AI Analysis Complete',
+        description: aiText.substring(0, 200) + '...',
+        impact: 'Medium',
+        confidence: 90
+      }
+    ];
+  };
+
+  const handleCustomQuery = async () => {
+    if (!customQuery.trim()) return;
+    
+    try {
+      setQueryLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/analytics/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ query: customQuery })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCustomInsights(data.insights);
+      }
+    } catch (error) {
+      console.error('Error processing custom query:', error);
+      setCustomInsights('Sorry, I encountered an error while processing your query. Please try again.');
+    } finally {
+      setQueryLoading(false);
+    }
+  };
 
   const getMetricData = () => {
     switch (selectedMetric) {
@@ -249,7 +375,36 @@ const Analytics: React.FC = () => {
             <div className="flex items-center space-x-2 mb-4">
               <Brain className="w-5 h-5 text-primary-600" />
               <h3 className="text-lg font-semibold text-gray-900">AI-Powered Insights</h3>
+              {loading && <Loader2 className="w-4 h-4 animate-spin text-primary-600" />}
             </div>
+            
+            {/* Custom Query Interface */}
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-medium text-gray-900 mb-3">Ask AI About Your Business</h4>
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={customQuery}
+                  onChange={(e) => setCustomQuery(e.target.value)}
+                  placeholder="e.g., How can I optimize my inventory? What are my top performing products?"
+                  className="flex-1 input-field text-sm"
+                />
+                <button
+                  onClick={handleCustomQuery}
+                  disabled={queryLoading || !customQuery.trim()}
+                  className="btn-primary px-4 py-2 text-sm disabled:opacity-50"
+                >
+                  {queryLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                </button>
+              </div>
+              {customInsights && (
+                <div className="mt-3 p-3 bg-white rounded border">
+                  <h5 className="font-medium text-gray-900 mb-2">AI Response:</h5>
+                  <p className="text-sm text-gray-700">{customInsights}</p>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-4">
               {aiInsights.map((insight, index) => (
                 <div key={index} className="p-4 rounded-lg bg-gray-50 border-l-4 border-primary-500">
@@ -345,6 +500,20 @@ const Analytics: React.FC = () => {
           </RadarChart>
         </ResponsiveContainer>
       </motion.div>
+
+      {/* AI Trend Analysis */}
+      {trendAnalysis && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">AI Trend Analysis</h3>
+          <div className="p-4 bg-blue-50 rounded-lg">
+            <p className="text-gray-700 whitespace-pre-line">{trendAnalysis}</p>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };
