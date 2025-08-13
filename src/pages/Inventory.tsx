@@ -1,96 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Package, 
-  Plus, 
   Search, 
-  Filter, 
-  AlertTriangle, 
-  CheckCircle,
+  TrendingUp, 
+  AlertTriangle,
+  Eye,
   Edit,
   Trash2,
-  Eye,
-  Brain,
-  TrendingUp,
-  TrendingDown,
-  Upload,
-  RefreshCw
+  Plus,
+  Filter,
+  TrendingDown
 } from 'lucide-react';
-import { productsAPI } from '../utils/api';
-import AddProductModal from '../components/AddProductModal';
-import CSVUploadModal from '../components/CSVUploadModal';
-
-interface Product {
-  id: number;
-  name: string;
-  category: string;
-  sku: string;
-  stock: number;
-  price: number;
-  cost: number;
-  status: 'in-stock' | 'low-stock' | 'out-of-stock';
-  last_updated: string;
-  supplier: string;
-}
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const Inventory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
-  const [isCSVUploadModalOpen, setIsCSVUploadModalOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
-  // Fetch products from database
-  const fetchProducts = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await productsAPI.getAll();
-      setProducts(data);
-    } catch (error: any) {
-      setError(error.message || 'Failed to fetch products');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Mock inventory data
+  const inventoryData = [
+    { id: 1, name: 'Laptop Pro X1', category: 'Electronics', sku: 'LP-X1-001', stock: 45, price: 1299.99, status: 'in-stock', supplier: 'TechCorp' },
+    { id: 2, name: 'Wireless Mouse', category: 'Electronics', sku: 'WM-002', stock: 12, price: 29.99, status: 'low-stock', supplier: 'TechCorp' },
+    { id: 3, name: 'Office Chair', category: 'Furniture', sku: 'OC-003', stock: 8, price: 199.99, status: 'low-stock', supplier: 'OfficeMax' },
+    { id: 4, name: 'Desk Lamp', category: 'Furniture', sku: 'DL-004', stock: 67, price: 49.99, status: 'in-stock', supplier: 'OfficeMax' },
+    { id: 5, name: 'Coffee Mug', category: 'Kitchen', sku: 'CM-005', stock: 0, price: 12.99, status: 'out-of-stock', supplier: 'KitchenPro' },
+    { id: 6, name: 'Bluetooth Speaker', category: 'Electronics', sku: 'BS-006', stock: 23, price: 89.99, status: 'in-stock', supplier: 'TechCorp' },
+  ];
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  const stockTrendData = [
+    { month: 'Jan', laptops: 50, electronics: 120, furniture: 30 },
+    { month: 'Feb', laptops: 45, electronics: 110, furniture: 25 },
+    { month: 'Mar', laptops: 40, electronics: 95, furniture: 20 },
+    { month: 'Apr', laptops: 42, electronics: 100, furniture: 22 },
+    { month: 'May', laptops: 45, electronics: 105, furniture: 28 },
+    { month: 'Jun', laptops: 45, electronics: 120, furniture: 30 },
+  ];
 
-  // Delete product
-  const handleDeleteProduct = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      try {
-        await productsAPI.delete(id);
-        fetchProducts(); // Refresh the list
-      } catch (error: any) {
-        setError(error.message || 'Failed to delete product');
-      }
-    }
-  };
-
-  // Update product status based on stock
-  const getProductStatus = (stock: number): 'in-stock' | 'low-stock' | 'out-of-stock' => {
-    if (stock === 0) return 'out-of-stock';
-    if (stock <= 10) return 'low-stock';
-    return 'in-stock';
-  };
-
-  const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
-  const statuses = ['all', 'in-stock', 'low-stock', 'out-of-stock'];
-
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.sku.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-    const matchesStatus = selectedStatus === 'all' || getProductStatus(product.stock) === selectedStatus;
-    
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
+  const categoryData = [
+    { name: 'Electronics', value: 45, color: '#3B82F6' },
+    { name: 'Furniture', value: 30, color: '#10B981' },
+    { name: 'Kitchen', value: 15, color: '#F59E0B' },
+    { name: 'Other', value: 10, color: '#EF4444' },
+  ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -101,284 +54,318 @@ const Inventory: React.FC = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'in-stock': return <CheckCircle className="w-4 h-4" />;
-      case 'low-stock': return <AlertTriangle className="w-4 h-4" />;
-      case 'out-of-stock': return <AlertTriangle className="w-4 h-4" />;
-      default: return null;
-    }
-  };
-
-  const aiRecommendations = [
-    {
-      type: 'restock',
-      title: 'Restock Recommendations',
-      description: `${products.filter(p => getProductStatus(p.stock) === 'out-of-stock').length} items need immediate restocking to avoid stockouts`,
-      items: products.filter(p => getProductStatus(p.stock) === 'out-of-stock').slice(0, 3).map(p => p.name),
-      priority: 'high'
-    },
-    {
-      type: 'optimization',
-      title: 'Inventory Optimization',
-      description: 'Consider reducing stock levels for slow-moving items',
-      items: products.filter(p => p.stock > 50).slice(0, 2).map(p => p.name),
-      priority: 'medium'
-    },
-    {
-      type: 'trend',
-      title: 'Demand Trends',
-      description: 'Monitor stock levels for popular categories',
-      items: products.filter(p => getProductStatus(p.stock) === 'low-stock').slice(0, 2).map(p => p.name),
-      priority: 'low'
-    }
-  ];
-
-  const inventoryStats = [
-    { label: 'Total Items', value: products.length, icon: Package },
-    { label: 'Low Stock', value: products.filter(p => getProductStatus(p.stock) === 'low-stock').length, icon: AlertTriangle },
-    { label: 'Out of Stock', value: products.filter(p => getProductStatus(p.stock) === 'out-of-stock').length, icon: AlertTriangle },
-    { label: 'Total Value', value: `$${products.reduce((sum, p) => sum + (p.stock * p.cost), 0).toLocaleString()}`, icon: TrendingUp },
-  ];
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex items-center space-x-2">
-          <RefreshCw className="w-6 h-6 animate-spin text-primary-600" />
-          <span className="text-gray-600">Loading inventory...</span>
-        </div>
-      </div>
-    );
-  }
+  const filteredInventory = inventoryData.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.sku.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+    const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="p-6 space-y-6"
+    >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Inventory Management</h1>
-          <p className="text-gray-600 mt-1">Manage your product inventory and stock levels</p>
+          <p className="text-gray-600 mt-1">Track products, monitor stock levels, and manage inventory</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <button 
-            className="btn-secondary flex items-center space-x-2"
-            onClick={() => setIsCSVUploadModalOpen(true)}
-          >
-            <Upload className="w-4 h-4" />
-            <span>Upload CSV</span>
-          </button>
-          <button 
-            className="btn-primary flex items-center space-x-2"
-            onClick={() => setIsAddProductModalOpen(true)}
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Product</span>
-          </button>
-        </div>
+        <button className="btn-primary flex items-center gap-2">
+          <Plus className="w-4 h-4" />
+          Add Product
+        </button>
       </div>
-
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600">{error}</p>
-        </div>
-      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {inventoryStats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="card"
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="card p-6"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Products</p>
+              <p className="text-2xl font-bold text-gray-900">156</p>
+              <p className="text-sm text-green-600 flex items-center gap-1 mt-1">
+                <TrendingUp className="w-4 h-4" />
+                +12 from last month
+              </p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-full">
+              <Package className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="card p-6"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">In Stock</p>
+              <p className="text-2xl font-bold text-gray-900">142</p>
+              <p className="text-sm text-green-600 flex items-center gap-1 mt-1">
+                <TrendingUp className="w-4 h-4" />
+                91% availability
+              </p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-full">
+              <TrendingUp className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="card p-6"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Low Stock</p>
+              <p className="text-2xl font-bold text-gray-900">8</p>
+              <p className="text-sm text-yellow-600 flex items-center gap-1 mt-1">
+                <AlertTriangle className="w-4 h-4" />
+                Needs attention
+              </p>
+            </div>
+            <div className="p-3 bg-yellow-100 rounded-full">
+              <AlertTriangle className="w-6 h-6 text-yellow-600" />
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="card p-6"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Out of Stock</p>
+              <p className="text-2xl font-bold text-gray-900">6</p>
+              <p className="text-sm text-red-600 flex items-center gap-1 mt-1">
+                <TrendingDown className="w-4 h-4" />
+                Requires restocking
+              </p>
+            </div>
+            <div className="p-3 bg-red-100 rounded-full">
+              <TrendingDown className="w-6 h-6 text-red-600" />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Stock Trend */}
+        <motion.div
+          whileHover={{ scale: 1.01 }}
+          className="card p-6"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Stock Trend</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={stockTrendData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="laptops" stroke="#3B82F6" strokeWidth={2} />
+              <Line type="monotone" dataKey="electronics" stroke="#10B981" strokeWidth={2} />
+              <Line type="monotone" dataKey="furniture" stroke="#F59E0B" strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        </motion.div>
+
+        {/* Category Distribution */}
+        <motion.div
+          whileHover={{ scale: 1.01 }}
+          className="card p-6"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Category Distribution</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={categoryData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {categoryData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </motion.div>
+      </div>
+
+      {/* AI Recommendations */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div
+          whileHover={{ scale: 1.01 }}
+          className="card p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Package className="w-5 h-5 text-blue-600" />
+            AI Restocking Recommendations
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Coffee Mug (CM-005)</p>
+                <p className="text-sm text-gray-600">Out of stock - Order 50 units immediately</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Wireless Mouse (WM-002)</p>
+                <p className="text-sm text-gray-600">Low stock - Reorder 30 units</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Office Chair (OC-003)</p>
+                <p className="text-sm text-gray-600">Low stock - Reorder 15 units</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          whileHover={{ scale: 1.01 }}
+          className="card p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-green-600" />
+            AI Optimization Insights
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">High-Performing Category</p>
+                <p className="text-sm text-gray-600">Electronics showing 25% growth - increase inventory</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Seasonal Trend</p>
+                <p className="text-sm text-gray-600">Furniture sales peak in Q3 - prepare stock</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Supplier Performance</p>
+                <p className="text-sm text-gray-600">TechCorp has 98% on-time delivery rate</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Inventory Table */}
+      <motion.div
+        whileHover={{ scale: 1.01 }}
+        className="card p-6"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">Product Inventory</h3>
+          <div className="flex gap-3">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-                </div>
-                <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
-                  <Icon className="w-6 h-6 text-primary-600" />
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
+              <option value="all">All Categories</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Furniture">Furniture</option>
+              <option value="Kitchen">Kitchen</option>
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Status</option>
+              <option value="in-stock">In Stock</option>
+              <option value="low-stock">Low Stock</option>
+              <option value="out-of-stock">Out of Stock</option>
+            </select>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* AI Recommendations */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-1"
-        >
-          <div className="card">
-            <div className="flex items-center space-x-2 mb-4">
-              <Brain className="w-5 h-5 text-primary-600" />
-              <h3 className="text-lg font-semibold text-gray-900">AI Recommendations</h3>
-            </div>
-            <div className="space-y-4">
-              {aiRecommendations.map((rec, index) => (
-                <div key={index} className="p-4 rounded-lg bg-gray-50 border-l-4 border-primary-500">
-                  <h4 className="font-medium text-gray-900 mb-2">{rec.title}</h4>
-                  <p className="text-sm text-gray-600 mb-3">{rec.description}</p>
-                  <div className="space-y-1">
-                    {rec.items.map((item, itemIndex) => (
-                      <div key={itemIndex} className="text-sm text-gray-700 flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
-                        <span>{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3">
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      rec.priority === 'high' ? 'bg-red-100 text-red-700' :
-                      rec.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-green-100 text-green-700'
-                    }`}>
-                      {rec.priority} priority
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left py-3 px-4 font-medium text-gray-900">Product</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">Category</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">SKU</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">Stock</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">Price</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredInventory.map((item) => (
+                <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="py-3 px-4 font-medium text-gray-900">{item.name}</td>
+                  <td className="py-3 px-4 text-gray-700">{item.category}</td>
+                  <td className="py-3 px-4 text-gray-700">{item.sku}</td>
+                  <td className="py-3 px-4 font-medium text-gray-900">{item.stock}</td>
+                  <td className="py-3 px-4 font-medium text-gray-900">${item.price}</td>
+                  <td className="py-3 px-4">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
+                      {item.status.replace('-', ' ')}
                     </span>
-                  </div>
-                </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex gap-2">
+                      <button className="p-1 text-blue-600 hover:bg-blue-100 rounded">
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button className="p-1 text-green-600 hover:bg-green-100 rounded">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button className="p-1 text-red-600 hover:bg-red-100 rounded">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               ))}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Product Table */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-2"
-        >
-          <div className="card">
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Search products..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="input-field pl-10"
-                  />
-                </div>
-              </div>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="input-field"
-              >
-                {categories.map(category => (
-                  <option key={category} value={category}>
-                    {category === 'all' ? 'All Categories' : category}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="input-field"
-              >
-                {statuses.map(status => (
-                  <option key={status} value={status}>
-                    {status === 'all' ? 'All Status' : status.replace('-', ' ')}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Product</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">SKU</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Stock</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Price</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredProducts.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-gray-500">
-                        {products.length === 0 ? 'No products found. Add your first product to get started!' : 'No products match your search criteria.'}
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredProducts.map((product) => {
-                      const status = getProductStatus(product.stock);
-                      return (
-                        <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 px-4">
-                            <div>
-                              <p className="font-medium text-gray-900">{product.name}</p>
-                              <p className="text-sm text-gray-500">{product.category}</p>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 text-sm text-gray-600">{product.sku}</td>
-                          <td className="py-3 px-4">
-                            <span className="font-medium text-gray-900">{product.stock}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="font-medium text-gray-900">${product.price}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
-                              {getStatusIcon(status)}
-                              <span className="ml-1">{status.replace('-', ' ')}</span>
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center space-x-2">
-                              <button className="text-gray-400 hover:text-gray-600">
-                                <Eye className="w-4 h-4" />
-                              </button>
-                              <button className="text-gray-400 hover:text-blue-600">
-                                <Edit className="w-4 h-4" />
-                              </button>
-                              <button 
-                                className="text-gray-400 hover:text-red-600"
-                                onClick={() => handleDeleteProduct(product.id)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Modals */}
-      <AddProductModal
-        isOpen={isAddProductModalOpen}
-        onClose={() => setIsAddProductModalOpen(false)}
-        onProductAdded={fetchProducts}
-      />
-
-      <CSVUploadModal
-        isOpen={isCSVUploadModalOpen}
-        onClose={() => setIsCSVUploadModalOpen(false)}
-        onUploadComplete={fetchProducts}
-      />
-    </div>
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
