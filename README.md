@@ -1,179 +1,238 @@
-# AI-Powered Data Analysis for Small Business
+# AI Business Analytics Dashboard
 
-A comprehensive React TypeScript application designed to help small businesses manage their operations with AI-powered insights and analytics.
+A comprehensive AI-powered business analytics dashboard for small businesses, featuring inventory management, customer analytics, sales tracking, and intelligent insights.
 
-## 🚀 Features
+## Features
 
-### 📊 Dashboard
-- Real-time business metrics and KPIs
-- Revenue trends and growth indicators
-- Customer distribution analysis
-- Top-performing products visualization
-- AI-powered insights and recommendations
+### 🔐 Authentication System
+- **User Registration & Login**: Secure user accounts with JWT authentication
+- **SQLite Database**: Persistent storage for user profiles and data
+- **Password Security**: Bcrypt hashing for secure password storage
 
 ### 📦 Inventory Management
-- Product catalog with detailed information
-- Stock level monitoring and alerts
-- Category-based filtering and search
-- AI recommendations for restocking
-- Inventory optimization suggestions
+- **Product Management**: Add, edit, delete, and view products
+- **Stock Tracking**: Real-time stock level monitoring with status indicators
+- **CSV Import**: Bulk upload products from CSV files
+- **Smart Status**: Automatic status updates based on stock levels (in-stock, low-stock, out-of-stock)
 
-### 📈 Analytics
-- Comprehensive business performance metrics
-- Trend analysis with interactive charts
-- Customer segmentation insights
-- Revenue and sales forecasting
-- AI-powered business intelligence
+### 📊 Analytics & Insights
+- **AI Recommendations**: Intelligent suggestions for inventory optimization
+- **Real-time Statistics**: Live inventory metrics and financial data
+- **Performance Tracking**: Monitor business performance over time
 
 ### 👥 Customer Management
-- Customer database with detailed profiles
-- Customer segmentation and analysis
-- Churn prediction and VIP identification
-- Customer growth tracking
-- AI insights for customer retention
+- **Customer Database**: Store and manage customer information
+- **Sales Tracking**: Record and analyze sales transactions
+- **Relationship Management**: Build and maintain customer relationships
 
-### 💰 Sales Tracking
-- Order management and processing
-- Sales performance analytics
-- Payment method distribution
-- Product sales analysis
-- AI-powered sales insights and alerts
+## Tech Stack
 
-### 🤖 AI Chatbot
-- Interactive business assistant
-- Real-time data queries and insights
-- Keyword-based intelligent responses
-- Business recommendations and alerts
-- 24/7 automated support
+### Frontend
+- **React 18** with TypeScript
+- **Tailwind CSS** for styling
+- **Framer Motion** for animations
+- **Lucide React** for icons
 
-## 🛠️ Technology Stack
+### Backend
+- **Node.js** with Express
+- **SQLite3** database
+- **JWT** for authentication
+- **Bcrypt** for password hashing
+- **Multer** for file uploads
+- **CSV Parser** for data import
 
-- **Frontend**: React 18 with TypeScript
-- **Styling**: Tailwind CSS with custom animations
-- **Charts**: Recharts for data visualization
-- **Icons**: Lucide React
-- **Animations**: Framer Motion
-- **UI Components**: Headless UI
-- **Utilities**: clsx, date-fns
+## Installation & Setup
 
-## 📦 Installation
+### Prerequisites
+- Node.js (v16 or higher)
+- npm or yarn
 
-1. **Clone or download the project files**
-
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-3. **Start the development server**:
-   ```bash
-   npm start
-   ```
-
-4. **Open your browser** and navigate to `http://localhost:3000`
-
-## 🎯 Usage
-
-### Navigation
-- Use the sidebar to navigate between different sections
-- Each page provides specific functionality for business management
-
-### Dashboard
-- View key business metrics at a glance
-- Monitor revenue trends and growth
-- Check AI-powered insights and recommendations
-
-### Inventory Management
-- Browse and search through product catalog
-- Filter products by category and status
-- View AI recommendations for inventory optimization
-
-### Analytics
-- Explore detailed business performance data
-- Analyze trends with interactive charts
-- Review AI-powered insights and opportunities
-
-### Customer Management
-- Manage customer database and profiles
-- Analyze customer segments and behavior
-- Review AI insights for customer retention
-
-### Sales Tracking
-- Monitor orders and sales performance
-- Track payment methods and revenue
-- View AI-powered sales insights and alerts
-
-### AI Chatbot
-- Click the chat icon in the bottom-right corner
-- Ask questions about your business data
-- Get instant AI-powered insights and recommendations
-
-## 🎨 Customization
-
-### Colors and Theme
-The application uses a custom color scheme defined in `tailwind.config.js`:
-- Primary colors: Blue and indigo variants
-- Secondary colors: Green and emerald variants
-- Custom animations for enhanced UX
-
-### Data
-Currently uses mock data for demonstration. To integrate with real data:
-1. Replace mock data arrays in each component
-2. Connect to your backend API
-3. Implement real-time data fetching
-
-### AI Chatbot
-The chatbot currently uses keyword-based responses. To enhance:
-1. Integrate with a real AI service (OpenAI, Azure, etc.)
-2. Implement more sophisticated response generation
-3. Add context-aware business insights
-
-## 📱 Responsive Design
-
-The application is fully responsive and works on:
-- Desktop computers
-- Tablets
-- Mobile devices
-
-## 🔧 Development
-
-### Project Structure
-```
-src/
-├── components/          # Reusable UI components
-│   ├── Sidebar.tsx     # Navigation sidebar
-│   └── Chatbot.tsx     # AI chatbot component
-├── pages/              # Main application pages
-│   ├── Dashboard.tsx   # Main dashboard
-│   ├── Inventory.tsx   # Inventory management
-│   ├── Analytics.tsx   # Analytics and insights
-│   ├── Customers.tsx   # Customer management
-│   └── Sales.tsx       # Sales tracking
-├── App.tsx             # Main application component
-├── index.tsx           # Application entry point
-└── index.css           # Global styles
+### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd hackathon
 ```
 
-### Available Scripts
-- `npm start` - Start development server
-- `npm build` - Build for production
-- `npm test` - Run tests
-- `npm eject` - Eject from Create React App
+### 2. Install Dependencies
+```bash
+npm install
+```
 
-## 🚀 Deployment
+### 3. Start the Backend Server
+```bash
+npm run server
+```
+The backend server will start on port 5001 and automatically initialize the SQLite database.
 
-1. **Build the application**:
-   ```bash
-   npm run build
-   ```
+### 4. Start the Frontend (in a new terminal)
+```bash
+npm start
+```
+The React app will start on port 3000.
 
-2. **Deploy the `build` folder** to your preferred hosting service:
-   - Netlify
-   - Vercel
-   - AWS S3
-   - GitHub Pages
+### 5. Run Both Simultaneously (Optional)
+```bash
+npm run dev
+```
+This command runs both the backend server and frontend concurrently.
 
-## 🤝 Contributing
+## Database Schema
+
+The application automatically creates the following tables:
+
+### Users Table
+- `id`: Primary key
+- `name`: User's full name
+- `email`: Unique email address
+- `password`: Hashed password
+- `created_at`: Account creation timestamp
+
+### Products Table
+- `id`: Primary key
+- `name`: Product name
+- `category`: Product category
+- `sku`: Unique stock keeping unit
+- `stock`: Current stock quantity
+- `price`: Selling price
+- `cost`: Product cost
+- `status`: Stock status (auto-calculated)
+- `last_updated`: Last modification timestamp
+- `supplier`: Supplier information
+- `user_id`: Foreign key to users table
+
+### Customers Table
+- `id`: Primary key
+- `name`: Customer name
+- `email`: Customer email
+- `phone`: Phone number
+- `address`: Customer address
+- `created_at`: Customer creation timestamp
+- `user_id`: Foreign key to users table
+
+### Sales Table
+- `id`: Primary key
+- `product_id`: Foreign key to products table
+- `customer_id`: Foreign key to customers table
+- `quantity`: Sold quantity
+- `price`: Sale price
+- `total`: Total sale amount
+- `sale_date`: Sale timestamp
+- `user_id`: Foreign key to users table
+
+## CSV Upload Format
+
+To bulk import products, use the following CSV format:
+
+```csv
+name,category,sku,stock,price,cost,supplier
+Laptop Pro X1,Electronics,LP-X1-001,45,1299.99,850.00,TechCorp Inc.
+Smartphone Galaxy S24,Electronics,SG-S24-002,8,899.99,600.00,MobileTech Ltd.
+```
+
+**Required columns**: name, category, sku, stock, price, cost
+**Optional columns**: supplier
+
+## API Endpoints
+
+### Authentication
+- `POST /api/register` - User registration
+- `POST /api/login` - User login
+- `GET /api/profile` - Get user profile
+
+### Products
+- `GET /api/products` - Get all products
+- `POST /api/products` - Create new product
+- `PUT /api/products/:id` - Update product
+- `DELETE /api/products/:id` - Delete product
+- `POST /api/upload-csv` - Upload CSV file
+
+### Customers
+- `GET /api/customers` - Get all customers
+- `POST /api/customers` - Create new customer
+
+**Note**: The backend API runs on port 5001 (http://localhost:5001)
+
+## Usage
+
+### 1. Create an Account
+- Navigate to the landing page
+- Click "Get Started" and create a new account
+- Log in with your credentials
+
+### 2. Add Products
+- Go to the Inventory page
+- Click "Add Product" to manually add products
+- Or use "Upload CSV" to bulk import products
+
+### 3. Manage Inventory
+- View all products in the inventory table
+- Filter by category or status
+- Search for specific products
+- Delete products as needed
+
+### 4. Monitor Analytics
+- View real-time inventory statistics
+- Check AI recommendations for inventory optimization
+- Monitor stock levels and alerts
+
+## Security Features
+
+- **JWT Authentication**: Secure token-based authentication
+- **Password Hashing**: Bcrypt encryption for passwords
+- **User Isolation**: Each user can only access their own data
+- **Input Validation**: Server-side validation for all inputs
+- **SQL Injection Protection**: Parameterized queries
+
+## File Structure
+
+```
+hackathon/
+├── src/
+│   ├── components/          # Reusable UI components
+│   │   ├── AddProductModal.tsx
+│   │   ├── CSVUploadModal.tsx
+│   │   ├── Sidebar.tsx
+│   │   └── Chatbot.tsx
+│   ├── contexts/           # React contexts
+│   │   └── AuthContext.tsx
+│   ├── pages/              # Page components
+│   │   ├── Inventory.tsx
+│   │   ├── Login.tsx
+│   │   ├── Register.tsx
+│   │   └── ...
+│   ├── utils/              # Utility functions
+│   │   └── api.ts
+│   └── App.tsx
+├── server/                 # Backend server
+│   └── index.js
+├── uploads/                # CSV upload directory
+└── package.json
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Port Already in Use**
+   - Backend: Change port in `server/index.js` or kill existing process
+   - Frontend: React will automatically suggest an alternative port
+
+2. **Database Errors**
+   - Ensure the server has write permissions in the project directory
+   - Check that SQLite3 is properly installed
+
+3. **CSV Upload Issues**
+   - Verify CSV format matches the required structure
+   - Check file size (should be reasonable for CSV files)
+   - Ensure all required columns are present
+
+### Development Tips
+
+- Use `npm run dev` to run both frontend and backend simultaneously
+- Check browser console and server logs for debugging information
+- The database file (`server/database.sqlite`) is created automatically on first run
+
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -181,28 +240,10 @@ src/
 4. Test thoroughly
 5. Submit a pull request
 
-## 📄 License
+## License
 
-This project is open source and available under the MIT License.
+This project is licensed under the MIT License.
 
-## 🆘 Support
+## Support
 
-For support or questions:
-1. Check the documentation
-2. Review the code comments
-3. Open an issue on GitHub
-
-## 🔮 Future Enhancements
-
-- Real-time data integration
-- Advanced AI/ML capabilities
-- Mobile app version
-- Multi-tenant support
-- Advanced reporting features
-- Integration with popular business tools
-- Real-time notifications
-- Advanced security features
-
----
-
-**Built with ❤️ for small businesses** 
+For support or questions, please open an issue in the repository or contact the development team. 

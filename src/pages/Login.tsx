@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowLeft, LogIn } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface LoginProps {
   onBack: () => void;
@@ -12,15 +13,27 @@ const Login: React.FC<LoginProps> = ({ onBack, onRegister, onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       setError('Please enter your email and password.');
       return;
     }
+
+    setIsLoading(true);
     setError(null);
-    onSuccess();
+
+    try {
+      await login(email, password);
+      onSuccess();
+    } catch (error: any) {
+      setError(error.message || 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -49,6 +62,7 @@ const Login: React.FC<LoginProps> = ({ onBack, onRegister, onSuccess }) => {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -62,13 +76,23 @@ const Login: React.FC<LoginProps> = ({ onBack, onRegister, onSuccess }) => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
 
-            <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2">
-              <LogIn className="w-4 h-4" /> Log in
+            <button 
+              type="submit" 
+              className="btn-primary w-full flex items-center justify-center gap-2"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <LogIn className="w-4 h-4" />
+              )}
+              {isLoading ? 'Logging in...' : 'Log in'}
             </button>
           </form>
 

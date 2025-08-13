@@ -19,13 +19,22 @@
     "@headlessui/react": "^1.7.0",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
-    "framer-motion": "^10.16.0"
+    "framer-motion": "^10.16.0",
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "cors": "^2.8.5",
+    "multer": "^1.4.5-lts.1",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "csv-parser": "^3.0.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "server": "node server/index.js",
+    "dev": "concurrently \"npm run server\" \"npm run start\""
   },
   "eslintConfig": {
     "extends": [
@@ -37,6 +46,7 @@
     "production": [
       ">0.2%",
       "not dead",
+      "not dead",
       "not op_mini all"
     ],
     "development": [
@@ -46,6 +56,7 @@
     ]
   },
   "devDependencies": {
-    "@types/jest": "^27.5.0"
+    "@types/jest": "^27.5.0",
+    "concurrently": "^8.2.2"
   }
 } 

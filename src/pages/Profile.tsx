@@ -18,12 +18,12 @@ import {
 const Profile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState({
-    name: 'John Doe',
-    email: 'john.doe@innosolve.com',
-    phone: '+1 (555) 123-4567',
+    name: 'Vishal',
+    email: 'contact@innosolve.com',
+    phone: '9677294510',
     company: 'Innosolve',
     position: 'Business Owner',
-    location: 'San Francisco, CA',
+    location: 'India, World',
     joinDate: 'January 2024',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
   });

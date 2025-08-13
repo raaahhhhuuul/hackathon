@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, ArrowLeft, UserPlus } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface RegisterProps {
   onBack: () => void;
@@ -14,8 +15,10 @@ const Register: React.FC<RegisterProps> = ({ onBack, onLogin, onSuccess }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { register } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password || !confirmPassword) {
       setError('Please fill in all fields.');
@@ -25,8 +28,18 @@ const Register: React.FC<RegisterProps> = ({ onBack, onLogin, onSuccess }) => {
       setError('Passwords do not match.');
       return;
     }
+
+    setIsLoading(true);
     setError(null);
-    onSuccess();
+
+    try {
+      await register(name, email, password);
+      onSuccess();
+    } catch (error: any) {
+      setError(error.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -55,6 +68,7 @@ const Register: React.FC<RegisterProps> = ({ onBack, onLogin, onSuccess }) => {
                   placeholder="Jane Doe"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -63,11 +77,12 @@ const Register: React.FC<RegisterProps> = ({ onBack, onLogin, onSuccess }) => {
               <div className="relative mt-1">
                 <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
-                  type="email"
+                  type="text"
                   className="input-field pl-9"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -81,6 +96,7 @@ const Register: React.FC<RegisterProps> = ({ onBack, onLogin, onSuccess }) => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -94,13 +110,23 @@ const Register: React.FC<RegisterProps> = ({ onBack, onLogin, onSuccess }) => {
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
 
-            <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2">
-              <UserPlus className="w-4 h-4" /> Create account
+            <button 
+              type="submit" 
+              className="btn-primary w-full flex items-center justify-center gap-2"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <UserPlus className="w-4 h-4" />
+              )}
+              {isLoading ? 'Creating account...' : 'Create account'}
             </button>
           </form>
 
